@@ -67,9 +67,6 @@ const menu = {
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
     const response = "Welcome to the Commerce Bot! Would you like to Shop?";
-
-    
-
     bot.sendMessage(chatId, response, greet);
 });
 
@@ -77,10 +74,9 @@ bot.onText(/\/start/, (msg) => {
 bot.on('callback_query', (query) => {
     const chatId = query.message.chat.id;
     const buttonClicked = query.data;
-    let newKeyboard;
 
     switch (buttonClicked) {
-        case 'Yes': // Use "Yes" to match the callback_data value
+        case 'Yes':
             console.log("Menu");
             bot.editMessageText("Here is our Menu!", {
                 chat_id: chatId,
@@ -88,54 +84,69 @@ bot.on('callback_query', (query) => {
                 reply_markup: menu.reply_markup
             });
             break;
-        case 'No': // Use "No" to match the callback_data value
+        case 'No':
         case 'exit':
             bot.editMessageText("Bot is now Closing. Thank you for Shopping with us :).", {
                 chat_id: chatId,
                 message_id: query.message.message_id
             });
-            // Remove the inline keyboard
-            bot.editMessageReplyMarkup({ inline_keyboard: [] }, {
-                chat_id: chatId,
-                message_id: query.message.message_id
-            });
+            // Do not remove the inline keyboard here
             break;
         case 'categories':
-            bot.editMessageText("You have chosen Categories, Fetching Categories Data...", {
-                chat_id: chatId,
-                message_id: query.message.message_id
-            });
-            // No need to update the inline keyboard here
+            try{
+                bot.editMessageText("You have chosen Categories, Fetching Categories Data...", {
+                    chat_id: chatId,
+                    message_id: query.message.message_id,
+                    reply_markup: menu.reply_markup
+                });
+            }catch(error){
+                console.log(error)
+            }
+            // Do not remove the inline keyboard here
             break;
         case 'cart':
+            try{
             bot.editMessageText("Wow, give me a sec and let me check your Cart", {
                 chat_id: chatId,
-                message_id: query.message.message_id
-            });
-            // No need to update the inline keyboard here
+                message_id: query.message.message_id,
+                reply_markup: menu.reply_markup
+            })}catch(error){
+                console.log(error)
+            }
+            // Do not remove the inline keyboard here
             break;
         case 'history':
+            try{
             bot.editMessageText("Fetching History Data...", {
                 chat_id: chatId,
-                message_id: query.message.message_id
-            });
-            // No need to update the inline keyboard here
+                message_id: query.message.message_id,
+                reply_markup: menu.reply_markup
+            })}catch(error){
+                console.log(error)
+            }
+            // Do not remove the inline keyboard here
             break;
         case 'login':
+            try{
             bot.editMessageText("Logging In...", {
                 chat_id: chatId,
-                message_id: query.message.message_id
-            });
-            // No need to update the inline keyboard here
+                message_id: query.message.message_id,
+                reply_markup: menu.reply_markup
+            })}catch(error){
+                console.log(error)
+            }
+            // Do not remove the inline keyboard here
             break;
         case 'register':
+            try{
             bot.editMessageText("Registering...", {
                 chat_id: chatId,
-                message_id: query.message.message_id
-            });
-            // No need to update the inline keyboard here
+                message_id: query.message.message_id,
+                reply_markup: menu.reply_markup
+            })}catch(error){
+                console.log(error)
+            }
+            // Do not remove the inline keyboard here
             break;
     }
-
-    
 });
