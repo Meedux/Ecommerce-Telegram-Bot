@@ -1,0 +1,19 @@
+{
+  "name": "onlinestorebot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test-bot": "nodemon index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12",
+    "fs": "^0.0.1-security",
+    "node-telegram-bot-api": "^0.63.0",
+    "nodemon": "^3.0.1"
+  }
+}
