@@ -1,8 +1,10 @@
+import { bot } from './lib/app.js';
 import { menu } from './inline/Menu.js';
 import { changeInlineKeyboard } from './lib/util.js';
-import TelegramBot from 'node-telegram-bot-api';
 
-const bot = new TelegramBot('6634328786:AAEMGMUIR-6zqIks4MXVGiie0nYT8SNfs9Q', { polling: true });
+import { setCatReplyMarkup } from './inline/Categories.js';
+
+
 
 // Buttons 
 const greet = {
@@ -25,7 +27,8 @@ const greet = {
 // Handle the /start command
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
-    const response = "Welcome to the Commerce Bot! Would you like to Shop?";
+    const userId = msg.from.id;
+    const response = `Welcome to the Commerce Bot! Would you like to Shop?`;
     bot.sendMessage(chatId, response, greet);
 });
 
@@ -45,10 +48,9 @@ bot.on('callback_query', (query) => {
                 chat_id: chatId,
                 message_id: query.message.message_id
             });
-            // Do not remove the inline keyboard here
             break;
         case 'categories':
-            changeInlineKeyboard("You have chosen Categories, Fetching Categories Data...", bot, menu.reply_markup, chatId, query)
+            changeInlineKeyboard("You have chosen Categories, Fetching Categories Data...", bot, setCatReplyMarkup(), chatId, query)
             break;
         case 'cart':
             changeInlineKeyboard("give me a sec and let me check your Cart...", bot, menu.reply_markup, chatId, query)
