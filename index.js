@@ -1,7 +1,7 @@
 import { bot } from './lib/app.js';
 import { menu } from './inline/Menu.js';
 import { changeInlineKeyboard } from './lib/util.js';
-
+import { sendCartContents } from './inline/Cart.js';
 import { setCatReplyMarkup } from './inline/Categories.js';
 
 
@@ -53,7 +53,8 @@ bot.on('callback_query', (query) => {
             changeInlineKeyboard("You have chosen Categories, Fetching Categories Data...", bot, setCatReplyMarkup(), chatId, query)
             break;
         case 'cart':
-            changeInlineKeyboard("give me a sec and let me check your Cart...", bot, menu.reply_markup, chatId, query)
+            // changeInlineKeyboard("give me a sec and let me check your Cart...", bot, menu.reply_markup, chatId, query)
+            sendCartContents(chatId, bot, query)
             break;
         case 'history':
             changeInlineKeyboard("Fetching History Data...", bot, menu.reply_markup, chatId, query)

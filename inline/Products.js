@@ -6,19 +6,22 @@ const products = [
         title: "Product 1",
         img: "https://random.imagecdn.app/500/300",
         description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam sem neque, euismod non libero eget, pharetra aliquet felis. Cras id neque pharetra, hendrerit urna at, rutrum risus. Maecenas in ultrices metus. Donec pulvinar, nibh sit amet imperdiet consequat, orci dui pharetra purus, nec efficitur elit nunc eu justo. Phasellus ut sodales libero. Aenean vel dictum tortor. Vivamus sed odio lacus. Vivamus finibus sagittis dui, ac dictum nisl ultricies sed. Donec id mi fringilla, ultrices magna non, volutpat ipsum. Vivamus et mattis turpis. Duis rutrum lectus at auctor porttitor. Praesent auctor massa mi, nec posuere diam tincidunt laoreet. Nulla facilisi. Sed consequat sit amet justo et tempor.",
-        price: 12.00
+        price: 12.00,
+        stock: 10
     },
     {
         title: "Product 2",
         img: "https://random.imagecdn.app/500/300",
         description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam sem neque, euismod non libero eget, pharetra aliquet felis. Cras id neque pharetra, hendrerit urna at, rutrum risus. Maecenas in ultrices metus. Donec pulvinar, nibh sit amet imperdiet consequat, orci dui pharetra purus, nec efficitur elit nunc eu justo. Phasellus ut sodales libero. Aenean vel dictum tortor. Vivamus sed odio lacus. Vivamus finibus sagittis dui, ac dictum nisl ultricies sed. Donec id mi fringilla, ultrices magna non, volutpat ipsum. Vivamus et mattis turpis. Duis rutrum lectus at auctor porttitor. Praesent auctor massa mi, nec posuere diam tincidunt laoreet. Nulla facilisi. Sed consequat sit amet justo et tempor.",
-        price: 10.00
+        price: 10.00,
+        stock: 10
     },
     {
         title: "Product 3",
         img: "https://random.imagecdn.app/500/300",
         description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam sem neque, euismod non libero eget, pharetra aliquet felis. Cras id neque pharetra, hendrerit urna at, rutrum risus. Maecenas in ultrices metus. Donec pulvinar, nibh sit amet imperdiet consequat, orci dui pharetra purus, nec efficitur elit nunc eu justo. Phasellus ut sodales libero. Aenean vel dictum tortor. Vivamus sed odio lacus. Vivamus finibus sagittis dui, ac dictum nisl ultricies sed. Donec id mi fringilla, ultrices magna non, volutpat ipsum. Vivamus et mattis turpis. Duis rutrum lectus at auctor porttitor. Praesent auctor massa mi, nec posuere diam tincidunt laoreet. Nulla facilisi. Sed consequat sit amet justo et tempor.",
-        price: 5.00
+        price: 5.00,
+        stock: 10
     },
 ]
 
@@ -46,7 +49,7 @@ Price: PHP${item.price}
                 inline_keyboard: [
                     [
                         {
-                            text: "Buy Now",
+                            text: `Buy Now(${item.stock})`,
                             callback_data: 'buy'
                         }
                     ],
