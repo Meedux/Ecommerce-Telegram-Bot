@@ -1,23 +1,23 @@
-import { bot } from "../lib/app.js";
 import { menu } from "./Menu.js";
 import { changeInlineKeyboard } from "../lib/util.js";
 import { sendProductMessages } from "./Products.js";
 
-const categories = [
-    "Category 1",
-    "Category 2",
-    "Category 3",
-    "Category 4",
-    "Category 5",
-]
 
-export const setCatReplyMarkup = () => {
+export const sendCatMenu = (chatId, bot, query) => {
+    const categories = [
+        "Category 1",
+        "Category 2",
+        "Category 3",
+        "Category 4",
+        "Category 5",
+    ]
+
     const temp = {
         reply_markup: {
             inline_keyboard: []
         }
     }; 
-
+    
     categories.forEach((cat) => {
         temp.reply_markup.inline_keyboard.push([
             {
@@ -25,10 +25,10 @@ export const setCatReplyMarkup = () => {
                 callback_data: cat
             }
         ])
-
+    
         temp.reply_markup.inline_keyboard.push([])
     })
-
+    
     temp.reply_markup.inline_keyboard.push([
         {
             text: "Return to Menu",
@@ -36,9 +36,11 @@ export const setCatReplyMarkup = () => {
         }
     ])
 
-    return temp.reply_markup
-}
-if(bot){
+
+
+
+    changeInlineKeyboard("This is Our Categories", bot, temp.reply_markup, chatId, query)
+
     bot.on('callback_query', (query) => {
         const chatId = query.message.chat.id;
         const selected = query.data;

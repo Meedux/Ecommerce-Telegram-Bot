@@ -23,29 +23,34 @@ const products = [
         price: 5.00,
         stock: 10
     },
-]
+];
 
 
 export const sendProductMessages = async (chatId, funcBot, categories, query) => {
-    const productMessages = []
+    // Check if the message content needs to be updated before editing
+    const newCategoryText = `${categories} Category Selected`;
 
-    funcBot.editMessageText(`${categories} Category Selected`, {
-        chat_id: chatId,
-        message_id: query.message.message_id
-    });
+    try {
+        const categoryMessageId = query.message.message_id;
+        const productMessages = [categoryMessageId];
 
-    productMessages.push(query.message.message_id)
+        if (query.message.text !== newCategoryText) {
+            await funcBot.editMessageText(newCategoryText, {
+                chat_id: chatId,
+                message_id: categoryMessageId,
+                parse_mode: 'Markdown',
+            });
+        }
 
-    const productPromises = products.map((item) => {
-        const productMessage = `
+        const productPromises = products.map(async (item) => {
+            const productMessage = `
 [Product Image](${item.img})
 Title: ${item.title}
 Description: ${item.description}
 Price: PHP${item.price}
-        `;
+            `;
 
-        const productMarkup = {
-            reply_markup: {
+            const productMarkup = {
                 inline_keyboard: [
                     [
                         {
@@ -68,46 +73,53 @@ Price: PHP${item.price}
                         }
                     ]
                 ]
-            }
-        }
+            };
 
-        return funcBot.sendMessage(chatId, productMessage, 
-            { 
-                parse_mode: 'Markdown', 
-                reply_markup: productMarkup.reply_markup 
-            })
-            .then((sentMessage) => {
-                productMessages.push(sentMessage.message_id);
-            });
-    });
-
-    await Promise.all(productPromises);
-
-    await funcBot.sendMessage(chatId, "Menu", {
-        reply_markup: {
-            inline_keyboard: [
-                [
-                    {
-                        text: "Return to Menu",
-                        callback_data: "return_menu"
-                    }
-                ]
-            ]
-        }
-    });
-
-    funcBot.on('callback_query', (query) => {
-        const newChatId = query.message.chat.id;
-        const selection = query.data;
-
-        if (selection == 'return_menu') {
-            if(productMessages.length > 0){
-                productMessages.forEach((messageId) => {
-                    funcBot.deleteMessage(chatId, messageId);
+            try {
+                const sentMessage = await funcBot.sendMessage(chatId, productMessage, {
+                    parse_mode: 'Markdown',
+                    reply_markup: productMarkup,
                 });
+                productMessages.push(sentMessage.message_id);
+            } catch (error) {
+                console.error("Error sending product message:", error);
             }
-            changeInlineKeyboard("Here is our Menu!", funcBot, menu.reply_markup, newChatId, query)
-        }
-    });
-}
+        });
+
+        await Promise.all(productPromises);
+
+        await funcBot.sendMessage(chatId, "Menu", {
+            reply_markup: {
+                inline_keyboard: [
+                    [
+                        {
+                            text: "Return to Menu",
+                            callback_data: "return_menu",
+                        }
+                    ]
+                ]
+            }
+        });
+
+        funcBot.on('callback_query', (query) => {
+            const newChatId = query.message.chat.id;
+            const selection = query.data;
+
+            if (selection == 'return_menu') {
+                if (productMessages.length > 0) {
+                    productMessages.forEach((messageId) => {
+                        try {
+                            funcBot.deleteMessage(chatId, messageId);
+                        } catch (err) {
+                            console.log(err);
+                        }
+                    });
+                }
+                changeInlineKeyboard("Here is our Menu!", funcBot, menu.reply_markup, newChatId, query);
+            }
+        });
+    } catch (error) {
+        console.error("Error in sendProductMessages:", error);
+    }
+};
 
