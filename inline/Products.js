@@ -87,8 +87,7 @@ Price: PHP${item.price}
         });
 
         await Promise.all(productPromises);
-
-        await funcBot.sendMessage(chatId, "Menu", {
+        const sentExit = await funcBot.sendMessage(chatId, "Menu", {
             reply_markup: {
                 inline_keyboard: [
                     [
@@ -101,21 +100,26 @@ Price: PHP${item.price}
             }
         });
 
+        productMessages.push(sentExit.message_id);
+
         funcBot.on('callback_query', (query) => {
             const newChatId = query.message.chat.id;
             const selection = query.data;
 
             if (selection == 'return_menu') {
                 if (productMessages.length > 0) {
-                    productMessages.forEach((messageId) => {
+                    productMessages.forEach((messageId, index) => {
                         try {
                             funcBot.deleteMessage(chatId, messageId);
+                            delete productMessages[index];
                         } catch (err) {
                             console.log(err);
                         }
                     });
                 }
-                changeInlineKeyboard("Here is our Menu!", funcBot, menu.reply_markup, newChatId, query);
+                funcBot.sendMessage(chatId, "Here is Our Menu", {
+                    reply_markup: menu.reply_markup
+                });
             }
         });
     } catch (error) {

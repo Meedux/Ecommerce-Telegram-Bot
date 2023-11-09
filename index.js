@@ -1,71 +1,33 @@
-import { menu } from './inline/Menu.js';
-import { changeInlineKeyboard } from './lib/util.js';
-import { sendCartContents } from './inline/Cart.js';
-import { sendCatMenu } from './inline/Categories.js';
-import { Sequelize } from 'sequelize';
-import TelegramBot from 'node-telegram-bot-api';
-import { configDotenv } from 'dotenv';
+import { Telegraf, Markup,  } from "telegraf";
+import { changeInlineKeyboard } from "./lib/util.js";
+import { menu } from "./inline/Menu.js";
 
-configDotenv();
-export const bot = new TelegramBot(process.env.TELEGRAMKEY, { polling: true });
-
+const bot = new Telegraf(process.env.TELEGRAMKEY);
 (async () => {
-
-    const sql = new Sequelize('juandb', 'root', 'root', {
-        host: 'localhost',
-        dialect: 'mysql'
-    })
+    bot.start((ctx) => {
+        const chatId = ctx.chat.id;
+        const userId = ctx.from.id;
     
-    bot.onText(/\/start/, (msg) => {
-        const chatId = msg.chat.id;
-        const userId = msg.from.id;
+        const inlineKeyboard = Markup.inlineKeyboard([
+            Markup.button.callback("Yes", "Yes"),
+            Markup.button.callback("No", "No")
+        ]);
     
-        const response = `Welcome to the Commerce Bot! Would you like to Shop?`;
-        bot.sendMessage(chatId, response, {
-            reply_markup:{
-                inline_keyboard: [
-                    [
-                        {
-                            text: "Yes",
-                            callback_data: "Yes"
-                        },
-                        {
-                            text: "No",
-                            callback_data: "No"
-                        }
-                    ]
-                ]
-            }
-        });
+        ctx.reply("Welcome to the Commerce Bot! Would you like to shop?", inlineKeyboard);
     });
     
-    bot.on('callback_query', (query) => {
-        const chatId = query.message.chat.id;
-        const buttonClicked = query.data;
-    
-        switch (buttonClicked) {
-            case 'Yes':
-                console.log("Menu");
-                changeInlineKeyboard("Here is our Menu!", bot, menu.reply_markup, chatId, query)
-                break;
-            case 'No':
-            case 'exit':
-                bot.editMessageText("Bot is now Closing. Thank you for Shopping with us :).", {
-                    chat_id: chatId,
-                    message_id: query.message.message_id
-                });
-                break;
-            case 'categories':
-                sendCatMenu(chatId, bot, query)
-                break;
-            case 'cart':
-                sendCartContents(chatId, bot, query)
-                break;
-            case 'history':
-                changeInlineKeyboard("Fetching History Data...", bot, menu.reply_markup, chatId, query)
-                break;
-        }
+    bot.action('Yes', (ctx) => {
+        const chatId = ctx.chat.id;
+        console.log('Menu');
+        changeInlineKeyboard('Here is our Menu!', ctx, menu);
     });
+    
+    bot.action('No', (ctx) => {
+        ctx.editMessageText("Bot is now Closing. Thank you for shopping with us :).");
+    });
+    
+    
+    
+    await bot.launch();
 })()
-
-
+export { bot };

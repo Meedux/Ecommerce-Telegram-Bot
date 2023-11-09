@@ -1,56 +1,24 @@
-import { menu } from "./Menu.js";
-import { changeInlineKeyboard } from "../lib/util.js";
-import { sendProductMessages } from "./Products.js";
+import { Markup } from 'telegraf';
 
+const categories = ['Category 1', 'Category 2', 'Category 3', 'Category 4', 'Category 5'];
 
-export const sendCatMenu = (chatId, bot, query) => {
-    const categories = [
-        "Category 1",
-        "Category 2",
-        "Category 3",
-        "Category 4",
-        "Category 5",
-    ]
+const buttons = categories.map((category) =>
+    Markup.button.callback(category, category)
+);
 
-    const temp = {
-        reply_markup: {
-            inline_keyboard: []
-        }
-    }; 
-    
-    categories.forEach((cat) => {
-        temp.reply_markup.inline_keyboard.push([
-            {
-                text: cat,
-                callback_data: cat
-            }
-        ])
-    
-        temp.reply_markup.inline_keyboard.push([])
-    })
-    
-    temp.reply_markup.inline_keyboard.push([
-        {
-            text: "Return to Menu",
-            callback_data: "return"
-        }
-    ])
+buttons.push(Markup.button.callback('Return to Menu', 'return'));
 
+const inlineKeyboard = Markup.inlineKeyboard(buttons).reply_markup;
 
+export const sendCatMenu = (chatId, ctx) => {
+    ctx.reply('This is Our Categories', inlineKeyboard);
 
+    ctx.action(categories, (ctx) => {
+        const selected = ctx.match;
+        sendProductMessages(chatId, ctx, selected);
+    });
 
-    changeInlineKeyboard("This is Our Categories", bot, temp.reply_markup, chatId, query)
-
-    bot.on('callback_query', (query) => {
-        const chatId = query.message.chat.id;
-        const selected = query.data;
-        categories.forEach((cat) => {
-            if(selected == cat){
-                sendProductMessages(chatId, bot, cat, query)
-            }
-        })
-        if(selected == 'return'){
-            changeInlineKeyboard("Here is our Menu!", bot, menu.reply_markup, chatId, query)
-        }
-    })
-}
+    ctx.action('return', (ctx) => {
+        ctx.editMessageText('Here is our Menu', { reply_markup: menu.reply_markup });
+    });
+};
