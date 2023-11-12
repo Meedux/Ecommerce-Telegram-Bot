@@ -1,46 +1,65 @@
-import { menu } from "./Menu.js";
-import { changeInlineKeyboard } from "../lib/util.js";
+import { menu } from './Menu.js';
+import { Markup } from 'telegraf';
 
 const products = [
     {
-        title: "Product 1",
-        img: "https://random.imagecdn.app/500/300",
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam sem neque, euismod non libero eget, pharetra aliquet felis. Cras id neque pharetra, hendrerit urna at, rutrum risus. Maecenas in ultrices metus. Donec pulvinar, nibh sit amet imperdiet consequat, orci dui pharetra purus, nec efficitur elit nunc eu justo. Phasellus ut sodales libero. Aenean vel dictum tortor. Vivamus sed odio lacus. Vivamus finibus sagittis dui, ac dictum nisl ultricies sed. Donec id mi fringilla, ultrices magna non, volutpat ipsum. Vivamus et mattis turpis. Duis rutrum lectus at auctor porttitor. Praesent auctor massa mi, nec posuere diam tincidunt laoreet. Nulla facilisi. Sed consequat sit amet justo et tempor.",
+        title: 'Product 1',
+        img: 'https://random.imagecdn.app/500/300',
+        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit...',
         price: 12.00,
-        stock: 10
+        stock: 10,
     },
     {
-        title: "Product 2",
-        img: "https://random.imagecdn.app/500/300",
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam sem neque, euismod non libero eget, pharetra aliquet felis. Cras id neque pharetra, hendrerit urna at, rutrum risus. Maecenas in ultrices metus. Donec pulvinar, nibh sit amet imperdiet consequat, orci dui pharetra purus, nec efficitur elit nunc eu justo. Phasellus ut sodales libero. Aenean vel dictum tortor. Vivamus sed odio lacus. Vivamus finibus sagittis dui, ac dictum nisl ultricies sed. Donec id mi fringilla, ultrices magna non, volutpat ipsum. Vivamus et mattis turpis. Duis rutrum lectus at auctor porttitor. Praesent auctor massa mi, nec posuere diam tincidunt laoreet. Nulla facilisi. Sed consequat sit amet justo et tempor.",
+        title: 'Product 2',
+        img: 'https://random.imagecdn.app/500/300',
+        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit...',
         price: 10.00,
-        stock: 10
+        stock: 10,
     },
     {
-        title: "Product 3",
-        img: "https://random.imagecdn.app/500/300",
-        description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam sem neque, euismod non libero eget, pharetra aliquet felis. Cras id neque pharetra, hendrerit urna at, rutrum risus. Maecenas in ultrices metus. Donec pulvinar, nibh sit amet imperdiet consequat, orci dui pharetra purus, nec efficitur elit nunc eu justo. Phasellus ut sodales libero. Aenean vel dictum tortor. Vivamus sed odio lacus. Vivamus finibus sagittis dui, ac dictum nisl ultricies sed. Donec id mi fringilla, ultrices magna non, volutpat ipsum. Vivamus et mattis turpis. Duis rutrum lectus at auctor porttitor. Praesent auctor massa mi, nec posuere diam tincidunt laoreet. Nulla facilisi. Sed consequat sit amet justo et tempor.",
+        title: 'Product 3',
+        img: 'https://random.imagecdn.app/500/300',
+        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit...',
         price: 5.00,
-        stock: 10
+        stock: 10,
     },
 ];
 
-
-export const sendProductMessages = async (chatId, funcBot, categories, query) => {
-    // Check if the message content needs to be updated before editing
-    const newCategoryText = `${categories} Category Selected`;
-
+export const sendProductMessages = async (ctx, categories, bot) => {
     try {
-        const categoryMessageId = query.message.message_id;
-        const productMessages = [categoryMessageId];
+        const newCategoryText = `${categories} Category Selected`;
 
-        if (query.message.text !== newCategoryText) {
-            await funcBot.editMessageText(newCategoryText, {
-                chat_id: chatId,
-                message_id: categoryMessageId,
-                parse_mode: 'Markdown',
-            });
-        }
+        const sentMessage = await ctx.editMessageText(newCategoryText, {
+            parse_mode: 'Markdown',
+        });
+
+        const productMessages = [sentMessage.message_id];
+
+        const buttons = products.map((item) => [
+            {
+                text: `Buy Now(${item.stock})`,
+                callback_data: `buy_${item.title}`,
+            },
+            {},
+            {
+                text: 'Add to Cart',
+                callback_data: `add_${item.title}`,
+            },
+            {},
+            {
+                text: 'Add to Favorites',
+                callback_data: `favorites_${item.title}`,
+            },
+        ]);
+
+        buttons.push([
+            {
+                text: 'Return to Menu',
+                callback_data: 'return_menu',
+            },
+        ]);
+
+        const inlineKeyboard = Markup.inlineKeyboard(buttons).reply_markup;
 
         const productPromises = products.map(async (item) => {
             const productMessage = `
@@ -50,80 +69,33 @@ Description: ${item.description}
 Price: PHP${item.price}
             `;
 
-            const productMarkup = {
-                inline_keyboard: [
-                    [
-                        {
-                            text: `Buy Now(${item.stock})`,
-                            callback_data: 'buy'
-                        }
-                    ],
-                    [],
-                    [
-                        {
-                            text: "Add to Cart",
-                            callback_data: 'add'
-                        }
-                    ],
-                    [],
-                    [
-                        {
-                            text: "Add to Favorites",
-                            callback_data: "favorites"
-                        }
-                    ]
-                ]
-            };
-
             try {
-                const sentMessage = await funcBot.sendMessage(chatId, productMessage, {
+                const sentProductMessage = await ctx.reply(productMessage, {
                     parse_mode: 'Markdown',
-                    reply_markup: productMarkup,
+                    reply_markup: inlineKeyboard,
                 });
-                productMessages.push(sentMessage.message_id);
+                productMessages.push(sentProductMessage.message_id);
             } catch (error) {
-                console.error("Error sending product message:", error);
+                console.error('Error sending product message:', error);
             }
         });
 
         await Promise.all(productPromises);
-        const sentExit = await funcBot.sendMessage(chatId, "Menu", {
-            reply_markup: {
-                inline_keyboard: [
-                    [
-                        {
-                            text: "Return to Menu",
-                            callback_data: "return_menu",
-                        }
-                    ]
-                ]
-            }
-        });
 
-        productMessages.push(sentExit.message_id);
-
-        funcBot.on('callback_query', (query) => {
-            const newChatId = query.message.chat.id;
-            const selection = query.data;
-
-            if (selection == 'return_menu') {
-                if (productMessages.length > 0) {
-                    productMessages.forEach((messageId, index) => {
-                        try {
-                            funcBot.deleteMessage(chatId, messageId);
-                            delete productMessages[index];
-                        } catch (err) {
-                            console.log(err);
-                        }
-                    });
-                }
-                funcBot.sendMessage(chatId, "Here is Our Menu", {
-                    reply_markup: menu.reply_markup
+        bot.action('return_menu', async (ctx) => {
+            if (productMessages.length > 0) {
+                productMessages.forEach(async (messageId, index) => {
+                    try {
+                        await ctx.deleteMessage(messageId);
+                        delete productMessages[index];
+                    } catch (err) {
+                        console.log(err);
+                    }
                 });
             }
+            await ctx.reply('Here is Our Menu', { reply_markup: menu.reply_markup });
         });
     } catch (error) {
-        console.error("Error in sendProductMessages:", error);
+        console.error('Error in sendProductMessages:', error);
     }
 };
-

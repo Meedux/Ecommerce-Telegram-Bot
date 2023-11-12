@@ -1,24 +1,29 @@
 import { Markup } from 'telegraf';
+import { sendProductMessages } from './Products.js';
+import { menu } from './Menu.js';
 
 const categories = ['Category 1', 'Category 2', 'Category 3', 'Category 4', 'Category 5'];
 
-const buttons = categories.map((category) =>
-    Markup.button.callback(category, category)
-);
+// Create buttons for each category
+const buttons = [];
 
-buttons.push(Markup.button.callback('Return to Menu', 'return'));
+categories.forEach((category) => {
+    buttons.push([Markup.button.callback(category, category)])
+});
+// Add a button for returning to the menu
+buttons.push([Markup.button.callback('Return to Menu', 'return')]);
 
-const inlineKeyboard = Markup.inlineKeyboard(buttons).reply_markup;
+const inlineKeyboard = Markup.inlineKeyboard(buttons);
 
-export const sendCatMenu = (chatId, ctx) => {
-    ctx.reply('This is Our Categories', inlineKeyboard);
+export const sendCatMenu = (ctx, bot) => {
+    ctx.editMessageText('This is Our Categories', inlineKeyboard);
 
-    ctx.action(categories, (ctx) => {
+    bot.action(categories, (ctx) => {
         const selected = ctx.match;
-        sendProductMessages(chatId, ctx, selected);
+        sendProductMessages(ctx, selected, selected);
     });
 
-    ctx.action('return', (ctx) => {
+    bot.action('return', (ctx) => {
         ctx.editMessageText('Here is our Menu', { reply_markup: menu.reply_markup });
     });
 };
