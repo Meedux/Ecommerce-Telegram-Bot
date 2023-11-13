@@ -34,40 +34,21 @@ export const sendProductMessages = async (ctx, categories, bot) => {
         });
 
         const productMessages = [sentMessage.message_id];
-
-        const buttons = products.map((item) => [
-            {
-                text: `Buy Now(${item.stock})`,
-                callback_data: `buy_${item.title}`,
-            },
-            {},
-            {
-                text: 'Add to Cart',
-                callback_data: `add_${item.title}`,
-            },
-            {},
-            {
-                text: 'Add to Favorites',
-                callback_data: `favorites_${item.title}`,
-            },
-        ]);
-
-        buttons.push([
-            {
-                text: 'Return to Menu',
-                callback_data: 'return_menu',
-            },
-        ]);
-
-        const inlineKeyboard = Markup.inlineKeyboard(buttons).reply_markup;
-
+        
         const productPromises = products.map(async (item) => {
             const productMessage = `
 [Product Image](${item.img})
 Title: ${item.title}
 Description: ${item.description}
 Price: PHP${item.price}
-            `;
+`;
+
+            const buttons = [];
+            buttons.push([Markup.button.callback(`👔) Buy Now(${item.stock})`, `buy_${item.title}`)])
+            buttons.push([Markup.button.callback(`🛒) Add to Cart`, `add_${item.title}`)])
+            buttons.push([Markup.button.callback(`💖) Add to Favorites`, `favorites_${item.title}`)])
+
+            const inlineKeyboard = Markup.inlineKeyboard(buttons).reply_markup;
 
             try {
                 const sentProductMessage = await ctx.reply(productMessage, {
@@ -75,6 +56,10 @@ Price: PHP${item.price}
                     reply_markup: inlineKeyboard,
                 });
                 productMessages.push(sentProductMessage.message_id);
+
+                buttons.forEach((item, index) => {
+                    delete buttons[index];
+                })
             } catch (error) {
                 console.error('Error sending product message:', error);
             }
@@ -82,17 +67,21 @@ Price: PHP${item.price}
 
         await Promise.all(productPromises);
 
+        const rt = Markup.inlineKeyboard([Markup.button.callback("📃) Return to Menu", "return_menu")]);
+
+        const rt_msg = await ctx.reply("Return", rt);
+
+        productMessages.push(rt_msg.message_id)
+
         bot.action('return_menu', async (ctx) => {
-            if (productMessages.length > 0) {
-                productMessages.forEach(async (messageId, index) => {
-                    try {
-                        await ctx.deleteMessage(messageId);
-                        delete productMessages[index];
-                    } catch (err) {
-                        console.log(err);
-                    }
-                });
-            }
+            productMessages.forEach(async (messageId, index) => {
+                try {
+                    await ctx.deleteMessage(messageId);
+                    delete productMessages[index];
+                } catch (err) {
+                    console.log(err);
+                }
+            });
             await ctx.reply('Here is Our Menu', { reply_markup: menu.reply_markup });
         });
     } catch (error) {

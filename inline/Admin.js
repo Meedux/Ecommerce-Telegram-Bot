@@ -1,35 +1,18 @@
+import { Markup } from "telegraf";
 import { menu } from "./Menu.js";
+import { changeInlineKeyboard } from "../lib/util.js";
 
-export const AdminInlineKeyboard = {
-    reply_markup: {
-        inline_keyboard: [
-            [
-                {
-                    text: "Add Product",
-                    callback_data: "add_product"
-                },
-                {
-                    text: "Update Product Details",
-                    callback_data: "update_product"
-                },
-            ],
-            [
+export const AdminInlineKeyboard = Markup.inlineKeyboard([
+    [Markup.button.callback("➕) Add Product", "add")],
+    [Markup.button.callback("👔) Update Product Details", "update")],
+    [Markup.button.callback("🚮) Delete Product", "delete")],
+    [Markup.button.callback("📃) Return to Menu", "return")]
+])
 
-            ],
-            [
-                {
-                    text: "Delete Product",
-                    callback_data: "delete_product"
-                },
-            ]
-        ]
-    }
-}
+export const sendAdminKeyboard = async (ctx, bot) => {
+    changeInlineKeyboard("Hello Owner! What do you want to do today?", ctx, AdminInlineKeyboard);
 
-export const sendAdminKeyboard = async (chatId, funcBot, categories, query) => {
-
-
-    funcBot.on("callback_query", (query) => {
-
-    });
+    bot.action('return', (ctx) => {
+        changeInlineKeyboard("This is Our Menu", ctx, menu)
+    })
 }

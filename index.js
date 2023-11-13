@@ -3,6 +3,7 @@ import { changeInlineKeyboard } from "./lib/util.js";
 import { menu } from "./inline/Menu.js";
 import { sendCartContents } from "./inline/Cart.js";
 import { sendCatMenu } from "./inline/Categories.js";
+import { sendAdminKeyboard } from "./inline/Admin.js";
 
 const bot = new Telegraf(process.env.TELEGRAMKEY);
 
@@ -40,12 +41,10 @@ const bot = new Telegraf(process.env.TELEGRAMKEY);
     
     bot.action('history', (ctx) => {
         ctx.editMessageText('Fetching History Data...');
-        // You can handle history data retrieval here.
     });
     
     bot.action('admin', (ctx) => {
-        ctx.editMessageText("Welcome Owner, what do you want to do with your Store today?");
-        // You can call your Admin related functions here.
+        sendAdminKeyboard(ctx, bot);
     });
 
     bot.action('exit', (ctx) => {

@@ -20,7 +20,7 @@ export const sendCatMenu = (ctx, bot) => {
 
     bot.action(categories, (ctx) => {
         const selected = ctx.match;
-        sendProductMessages(ctx, selected, selected);
+        sendProductMessages(ctx, selected, bot);
     });
 
     bot.action('return', (ctx) => {
