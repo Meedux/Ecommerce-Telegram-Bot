@@ -38,8 +38,8 @@ export const UpdateCatScene = new Scenes.WizardScene("UPDATE_CATEGORY",
         try {
             ctx.state.existingCategories = await Category.findAll();
             ctx.state.categoryButtons = [];
-            ctx.state.existingCategories.forEach((category) =>
-                ctx.state.categoryButtons.push([Markup.button.callback(category.Name, `update_${category.ID}`)])
+            ctx.state.existingCategories.forEach((category) => 
+                ctx.state.categoryButtons.push([Markup.button.callback(category.Name, `update_${category.id}`)])
             );
             ctx.state.categoryButtons.push([Markup.button.callback('Return to Admin Menu', 'return_admin')]);
             ctx.state.inlineKeyboard = Markup.inlineKeyboard(ctx.state.categoryButtons);
@@ -73,8 +73,9 @@ export const UpdateCatScene = new Scenes.WizardScene("UPDATE_CATEGORY",
     }
 )
 
-UpdateCatScene.action(/update_[0-9a-fA-F-]+$/, async (ctx) => {
-    ctx.session.updatedCategoryId = ctx.match[0].split('_')[1];
+UpdateCatScene.action(/update_[0-9]+$/, async (ctx) => {
+    console.log(ctx.match[0].split('_')[1], 10)
+    ctx.session.updatedCategoryId = parseInt(ctx.match[0].split('_')[1], 10);
     await ctx.reply('Please provide the updated name for the category.');
     return ctx.wizard.next();
 })
@@ -89,8 +90,10 @@ export const DeleteCatScene = new Scenes.WizardScene("DELETE_CATEGORY",
         try {
             const existingCategories = await Category.findAll();
             const categoryButtons = [];
-            existingCategories.forEach((category) =>
-                categoryButtons.push([Markup.button.callback(category.Name, `delete_${category.ID}`)])
+            existingCategories.forEach((category) =>{
+                    categoryButtons.push([Markup.button.callback(category.Name, `delete_${category.id}`)])
+                    console.log(`${category.Name}, ${category.id}`)
+                }
             );
             categoryButtons.push([Markup.button.callback('Return to Admin Menu', 'return_admin')]);
             const inlineKeyboard = Markup.inlineKeyboard(categoryButtons);
@@ -103,8 +106,8 @@ export const DeleteCatScene = new Scenes.WizardScene("DELETE_CATEGORY",
     }
 )
 
-DeleteCatScene.action(/delete_[0-9a-fA-F-]+$/, async (ctx) => {
-    const categoryId = ctx.match[0].split('_')[1];
+DeleteCatScene.action(/delete_[0-9]+$/, async (ctx) => {
+    const categoryId = parseInt(ctx.match[0].split('_')[1], 10);
     try {
         const categoryToDelete = await Category.findByPk(categoryId);
         if (!categoryToDelete) {
@@ -112,6 +115,7 @@ DeleteCatScene.action(/delete_[0-9a-fA-F-]+$/, async (ctx) => {
             await ctx.reply("Hello Owner! What do you want to do today?", AdminInlineKeyboard);
             return;
         }
+        await Product.update({ CategoryId: 0 }, { where: { CategoryID: categoryId } })
         await categoryToDelete.destroy();
         await ctx.reply(`Category '${categoryToDelete.Name}' has been deleted.`);
         await ctx.reply("Hello Owner! What do you want to do today?", AdminInlineKeyboard);
@@ -152,9 +156,9 @@ export const AddProductScene = new Scenes.WizardScene("ADD_PRODUCT",
         }
     
         ctx.state.categoryButtons = [];
-        ctx.state.categories.forEach((category) =>
-            ctx.state.categoryButtons.push([Markup.button.callback(category.Name, `select_category_${category.ID}`)])
-        );
+        ctx.state.categories.forEach((category) => {
+            ctx.state.categoryButtons.push([Markup.button.callback(category.Name, `select_category_${category.id}`)])
+        });
         ctx.state.inlineKeyboard = Markup.inlineKeyboard(ctx.state.categoryButtons);
         await ctx.reply('Choose a category:', ctx.state.inlineKeyboard);
     },
@@ -197,13 +201,21 @@ export const AddProductScene = new Scenes.WizardScene("ADD_PRODUCT",
         ctx.scene.state.messageId.push(ctx.message.message_id)
 
         try {
-            await Product.create({
-                cateogryId: ctx.scene.state.obj.categoryId,
+            console.log({
                 title: ctx.scene.state.obj.title,
                 img: ctx.scene.state.obj.img,
                 description: ctx.scene.state.obj.description,
                 price: ctx.scene.state.obj.price,
                 stock: ctx.scene.state.obj.stock,
+                CategoryId: ctx.scene.state.obj.categoryId,
+            });
+            await Product.create({
+                title: ctx.scene.state.obj.title,
+                img: ctx.scene.state.obj.img,
+                description: ctx.scene.state.obj.description,
+                price: ctx.scene.state.obj.price,
+                stock: ctx.scene.state.obj.stock,
+                CategoryId: ctx.scene.state.obj.categoryId,
             });
 
             for (const id of ctx.scene.state.messageId) {
@@ -220,12 +232,20 @@ export const AddProductScene = new Scenes.WizardScene("ADD_PRODUCT",
     }
 )
 
-AddProductScene.action(/^select_category_[0-9a-fA-F-]+$/, async (ctx) => {
+AddProductScene.action(/^select_category_[0-9]+$/, async (ctx) => {
     await ctx.deleteMessage();
-    ctx.scene.state.obj.categoryId = ctx.match[0].split('_')[1];
-    const temp = await ctx.reply('Please provide the product title:');
-    ctx.scene.state.messageId.push(temp.message_id);
-    ctx.wizard.next();
+    const categoryIdMatch = ctx.match[0].split('_')[2]; 
+    console.log(categoryIdMatch)
+    if (categoryIdMatch) {
+        const categoryId = parseInt(categoryIdMatch, 10);
+        if (!isNaN(categoryId)) {
+            ctx.scene.state.obj.categoryId = categoryId;
+            console.log(`Category ID: ${categoryId}`);
+            const temp = await ctx.reply('Please provide the product title:');
+            ctx.scene.state.messageId.push(temp.message_id);
+            ctx.wizard.next();
+        }
+    }
 })
 
 export const UpdateProductScene = new Scenes.WizardScene("UPDATE_PRODUCT", 
@@ -243,7 +263,7 @@ export const UpdateProductScene = new Scenes.WizardScene("UPDATE_PRODUCT",
             }
 
             const productButtons = products.map((product) =>
-                Markup.button.callback(product.title, `select_product_${product.ID}`)
+                Markup.button.callback(product.title, `select_product_${product.id}`)
             );
     
             const inlineKeyboard = Markup.inlineKeyboard(productButtons);
@@ -323,8 +343,8 @@ export const UpdateProductScene = new Scenes.WizardScene("UPDATE_PRODUCT",
     }
 )
 
-UpdateProductScene.action(/^select_product_[0-9a-fA-F-]+$/, async (ctx) => {
-    ctx.scene.state.productId = ctx.match[0].split('_')[1];
+UpdateProductScene.action(/^select_product_[0-9]+$/, async (ctx) => {
+    ctx.scene.state.productId = parseInt(ctx.match[0].split('_')[1], 10);
     await ctx.reply('Choose what to update:', UpdateProductInlineKeyboard);
 });
 
@@ -338,10 +358,10 @@ UpdateProductScene.action("update_product_category", async (ctx) => {
     await ctx.reply('Choose a New category for the Product:', ctx.state.inlineKeyboard);
 })
 
-AddProductScene.action(/^select_category_[0-9a-fA-F-]+$/, async (ctx) => {
+// AddProductScene.action(/^select_category_[0-9]+$/, async (ctx) => {
 
-    ctx.scene.leave();
-})
+//     ctx.scene.leave();
+// })
 
 UpdateProductScene.action("update_product_title", async (ctx) => {
     ctx.scene.state.STATE = "Title";
@@ -381,6 +401,68 @@ UpdateProductScene.action("return_admin", async (ctx) => {
 UpdateProductScene.action("return", async (ctx) => {
     changeInlineKeyboard("This is Our Menu", ctx, menu)
     ctx.scene.leave();
+})
+
+
+// DELETE_PRODUCT_SCENE
+export const DeleteProductScene = new Scenes.WizardScene("DELETE_PRODUCT", 
+    async (ctx) => {
+        ctx.state.categoryId = 0;
+        ctx.state.productId = 0
+        ctx.state.categories = await Category.findAll();
+        if (ctx.state.categories.length === 0) {
+            await ctx.reply('Please create categories first!');
+            await ctx.reply("Hello Owner! What do you want to do today?", AdminInlineKeyboard)
+            return;
+        }
+    
+        ctx.state.categoryButtons = [];
+        ctx.state.categories.forEach((category) => {
+            ctx.state.categoryButtons.push([Markup.button.callback(category.Name, `select_category_${category.id}`)])
+        });
+        ctx.state.inlineKeyboard = Markup.inlineKeyboard(ctx.state.categoryButtons);
+        await ctx.reply('Choose a category:', ctx.state.inlineKeyboard);
+    },
+    async (ctx) => {
+        const productItems = await Product.findAll({ where: {CategoryID: ctx.state.categoryId} });
+        console.log(productItems)
+        const productButtons = [];
+
+        productItems.forEach((item) => {
+            productButtons.push([Markup.button.callback(item.title, `delete_product_${product.id}`)])
+        })
+
+        ctx.state.inlineKeyboard = Markup.inlineKeyboard(productButtons);
+        await ctx.reply('Choose a category:', ctx.state.inlineKeyboard);
+    }
+)
+
+DeleteProductScene.action(/^select_category_[0-9]+$/, async (ctx) => {
+    const categoryIdMatch = ctx.match[0].split('_')[2];
+    const categoryId = parseInt(categoryIdMatch, 10);
+    ctx.scene.state.categoryId = categoryId;
+    ctx.wizard.next();
+})
+
+DeleteProductScene.action(/^delete_product_[0-9]+$/, async (ctx) => {
+    const itemtoDeleteID = ctx.match[0].split('_')[2]; 
+    try {
+        const productToDelete = await Category.findByPk(itemtoDeleteID);
+        if (!productToDelete) {
+            await ctx.reply('Product not found.');
+            await ctx.reply("Hello Owner! What do you want to do today?", AdminInlineKeyboard);
+            return;
+        }
+        await productToDelete.destroy();
+        await ctx.reply(`Product '${productToDelete.Name}' has been deleted.`);
+        await ctx.reply("Hello Owner! What do you want to do today?", AdminInlineKeyboard);
+        return ctx.scene.leave();
+    } catch (error) {
+        console.error('Error deleting Product:', error);
+        await ctx.reply('An error occurred while deleting the Product. Please try again.');
+        await ctx.reply("Hello Owner! What do you want to do today?", AdminInlineKeyboard);
+        return ctx.scene.leave();
+    }
 })
 
 export const ProductInlineKeyboard = Markup.inlineKeyboard([
@@ -464,6 +546,6 @@ export const sendAdminKeyboard = async (ctx, bot) => {
     })
 
     bot.action('delete_product',async (ctx) => {
-        
+        await ctx.scene.enter("DELETE_PRODUCT");
     })
 }

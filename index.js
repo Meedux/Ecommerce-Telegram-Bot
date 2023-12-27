@@ -7,16 +7,18 @@ import { testDatabase } from "./lib/db.js";
 import { Sequelize } from "sequelize";
 import { SynchroniseModels, defineModels } from "./lib/models.js";
 import { Scenes } from "telegraf";
-import { AddCatScene, UpdateCatScene,DeleteCatScene, AddProductScene, UpdateProductScene } from "./inline/Admin.js";
+import { AddCatScene, UpdateCatScene,DeleteCatScene, AddProductScene, UpdateProductScene, DeleteProductScene} from "./inline/Admin.js";
+import { ProductScene } from "./inline/Products.js";
+import { CartScene, sendCartContents } from "./inline/Cart.js";
 
 const db = new Sequelize(process.env.DBNAME, process.env.DBUSER, process.env.DBPASS, {
     host: 'localhost',
     dialect: 'mysql'
 })
 const bot = new Telegraf(process.env.TELEGRAMKEY);
-const stage = new Scenes.Stage([AddCatScene, UpdateCatScene, DeleteCatScene, AddProductScene, UpdateProductScene])
+const stage = new Scenes.Stage([AddCatScene, UpdateCatScene, DeleteCatScene, AddProductScene, UpdateProductScene, DeleteProductScene, ProductScene, CartScene])
 
-const { Product, User, Category } = defineModels(db);
+const { Product, User, Category, CartItems, Order } = defineModels(db);
 
 (async () => {
     try {
@@ -47,16 +49,17 @@ const { Product, User, Category } = defineModels(db);
             });
             
             bot.action('No', (ctx) => {
-                ctx.editMessageText("Bot is now Closing. Thank you for shopping with us :).");
+                ctx.editMessageText("Bot is now Closing. Thank you for shopping with us :).", {
+                    reply_markup: undefined
+                });
             });
             
             bot.action('categories', (ctx) => {
                 sendCatMenu(ctx, bot);
             });
             
-            bot.action('cart', (ctx) => {
-                // Call your sendCartContents function here.
-                
+            bot.action('cart', async (ctx) => {
+                await sendCartContents(ctx);
             });
             
             bot.action('history', (ctx) => {
@@ -68,8 +71,9 @@ const { Product, User, Category } = defineModels(db);
             });
         
             bot.action('exit', (ctx) => {
-                ctx.editMessageText("Goodbye Customer! 😁");
-        
+                ctx.editMessageText("Goodbye Customer! 😁", {
+                    reply_markup: undefined
+                });
             });
             
             await bot.launch();
@@ -83,5 +87,7 @@ export {
     db, 
     Product, 
     User, 
-    Category 
+    Category,
+    CartItems,
+    Order
 };

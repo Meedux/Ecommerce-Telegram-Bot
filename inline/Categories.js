@@ -19,7 +19,7 @@ export const sendCatMenu = async (ctx, bot) => {
     categories.forEach((category) => {
         bot.action(category.Name, (ctx) => {
             const selected = ctx.match;
-            sendProductMessages(ctx, selected, bot);
+            sendProductMessages(ctx, selected, bot, category.id);
         });
     });
 
